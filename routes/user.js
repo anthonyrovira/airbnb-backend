@@ -8,6 +8,7 @@ const router = express.Router();
 
 //Importation des modèles
 const User = require("../models/User");
+const SHA256 = require("crypto-js/sha256");
 
 router.post("/user/signup", async (req, res) => {
   try {
@@ -70,6 +71,39 @@ router.post("/user/signup", async (req, res) => {
       }
     } else {
       res.status(400).json({ error: "This email already has an account." });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({
+      error: error.message,
+    });
+  }
+});
+
+router.post("/user/login", async (req, res) => {
+  try {
+    const { email, password } = req.fields;
+    if (email && password) {
+      const user = await User.findOne({ email: email });
+      if (user) {
+        const hashToCompare = SHA256(password + user.salt).toString(encBase64);
+        if (hashToCompare === user.hash) {
+          res.status(200).json({
+            _id: user._id,
+            token: user.token,
+            email: email,
+            username: user.username,
+            description: user.description,
+            name: user.name,
+          });
+        } else {
+          res.status(401).json({ error: "Wrong password" });
+        }
+      } else {
+        res.status(401).json({ error: "User not yet registered" });
+      }
+    } else {
+      res.status(400).json({ error: "Missing parameters" });
     }
   } catch (error) {
     console.log(error.message);
