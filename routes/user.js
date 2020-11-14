@@ -1,19 +1,37 @@
 const express = require("express");
 const uid2 = require("uid2");
-const SHA86 = require("crypto-js/sha256");
+const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const cloudinary = require("cloudinary").v2;
+const isAdmin = require("../middlewares/isAdmin");
 
 const router = express.Router();
 
 //Importation des modèles
 const User = require("../models/User");
-const SHA256 = require("crypto-js/sha256");
+const Room = require("../models/Room");
+
+router.get("/users", isAdmin, async (req, res) => {
+  try {
+    const allUsers = await User.find();
+    //console.log(allUsers);
+    res.status(200).json({ allUsers });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
 
 router.post("/user/signup", async (req, res) => {
   try {
-    const userCheck = await User.findOne(req.fields.email);
-    if (userCheck) {
+    const { email, username } = req.fields;
+    const userEmail = await User.findOne({ email });
+    const userUsername = await User.findOne({ username });
+    if (userEmail) {
+      res.status(400).json({ error: "This email already has an account." });
+    } else if (userUsername) {
+      res.status(400).json({ error: "This username already has an account." });
+    } else {
       const {
         email,
         password,
@@ -22,13 +40,12 @@ router.post("/user/signup", async (req, res) => {
         dateOfBirth,
         description,
       } = req.fields;
-      const photoToUpload = req.files.photo.path;
       const regexDate = /\d{4}-\d{2}-\d{2}/g;
 
-      if (email && password && username && name && dateOfBirth && description) {
+      if (email && password && username) {
         if (regexDate.test(dateOfBirth)) {
           const salt = uid2(64);
-          const hash = SHA86(password + salt).toString(encBase64);
+          const hash = SHA256(password + salt).toString(encBase64);
           const token = uid2(64);
 
           const newUser = new User({
@@ -44,8 +61,9 @@ router.post("/user/signup", async (req, res) => {
             salt: salt,
           });
 
-          if (photoToUpload) {
-            const newPhoto = await cloudinary.uploader.upload(newPhoto, {
+          if (req.files.photo) {
+            const photoToUpload = req.files.photo.path;
+            const newPhoto = await cloudinary.uploader.upload(photoToUpload, {
               folder: `/airbnb/${newUser._id}`,
               public_id: "personalPicture",
             });
@@ -59,9 +77,9 @@ router.post("/user/signup", async (req, res) => {
             _id: newUserReturned._id,
             token: newUserReturned.token,
             email: newUserReturned.email,
-            username: newUserReturned.username,
-            description: newUserReturned.description,
-            name: newUserReturned.name,
+            username: newUserReturned.account.username,
+            description: newUserReturned.account.description,
+            name: newUserReturned.account.name,
           });
         } else {
           res.status(400).json({ error: "Date format is incorrect" });
@@ -69,8 +87,6 @@ router.post("/user/signup", async (req, res) => {
       } else {
         res.status(400).json({ error: "Missing parameters" });
       }
-    } else {
-      res.status(400).json({ error: "This email already has an account." });
     }
   } catch (error) {
     console.log(error.message);
@@ -97,7 +113,7 @@ router.post("/user/login", async (req, res) => {
             name: user.name,
           });
         } else {
-          res.status(401).json({ error: "Wrong password" });
+          res.status(401).json({ error: "Wrong email or password" });
         }
       } else {
         res.status(401).json({ error: "User not yet registered" });

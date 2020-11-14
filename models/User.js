@@ -7,7 +7,7 @@ const User = mongoose.model("User", {
     name: { type: String, max: 25 },
     description: { type: String, max: 500 },
     dateOfBirth: Date,
-    photo: Object,
+    photo: mongoose.Schema.Types.Mixed,
   },
   token: { type: String, min: 64, max: 64 },
   hash: String,

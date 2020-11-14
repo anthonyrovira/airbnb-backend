@@ -25,14 +25,18 @@ cloudinary.config({
 // Importation des routes
 const userRoutes = require("./routes/user");
 app.use(userRoutes);
+const roomRoutes = require("./routes/room");
+app.use(roomRoutes);
 
 app.all("*", (req, res) => {
   console.log("Route is not defined");
-  res.status(400).json({
+  res.status(404).json({
     error: error.message,
   });
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server has started on port ${process.env.PORT}`);
+app.listen(process.env.PORT || 3000, () => {
+  const host = process.env.MONGODB_URI.replace("mongodb://", "");
+  const port = process.env.PORT || 3000;
+  console.log("App listening at http://%s:%s", host, port);
 });
