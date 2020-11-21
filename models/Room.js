@@ -1,10 +1,23 @@
 const mongoose = require("mongoose");
 
 const Room = mongoose.model("Room", {
-  title: String,
-  description: String,
-  price: Number,
-  ratingValue: Number,
+  title: {
+    type: String,
+    max: 20,
+  },
+  description: {
+    type: String,
+    max: 500,
+  },
+  price: {
+    type: Number,
+    min: 1,
+  },
+  ratingValue: {
+    type: Number,
+    min: 0,
+    max: 5,
+  },
   reviews: Number,
   photos: [mongoose.Schema.Types.Mixed],
   location: [Number],

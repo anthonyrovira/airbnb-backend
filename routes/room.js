@@ -144,6 +144,7 @@ router.post("/room/delete/:id", isAuthenticated, async (req, res) => {
           const userRooms = user.rooms;
           const position = userRooms.indexOf(roomId);
           if (position > -1) {
+            user.rooms.splice(position, 1);
             user.markModified("rooms");
             await user.save();
             await roomToDelete.deleteOne();
@@ -159,6 +160,115 @@ router.post("/room/delete/:id", isAuthenticated, async (req, res) => {
       }
     } else {
       res.status(400).json({ message: "room id is missing" });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put("/room/upload_picture/:id", isAuthenticated, async (req, res) => {
+  try {
+    if (req.params.id) {
+      const roomToUpdate = await Room.findById(req.params.id);
+      if (roomToUpdate) {
+        const { picture1, picture2, picture3, picture4, picture5 } = req.files;
+        if (picture1 || picture2 || picture3 || picture4 || picture5) {
+          if (String(roomToUpdate.user) === String(req.user._id)) {
+            const tabPhotos = roomToUpdate.photos;
+            if (5 - tabPhotos.length > 0 && 5 - tabPhotos.length <= 5) {
+              for (let i = 1; i < 6; i++) {
+                if (req.files[`picture${i}`]) {
+                  let pictureToUpload = req.files[`picture${i}`].path;
+                  await cloudinary.uploader.upload(
+                    pictureToUpload,
+                    {
+                      folder: `/airbnb/rooms/${req.user._id}/${req.params.id}`,
+                      picture_id: `picture${i}`,
+                    },
+                    (error, result) => {
+                      let newPicture = {
+                        url: result.secure_url,
+                        picture_id: result.public_id,
+                      };
+                      tabPhotos.push(newPicture);
+                    }
+                  );
+                }
+              }
+
+              await Room.findByIdAndUpdate(req.params.id, {
+                photos: tabPhotos,
+              });
+
+              const roomUpdated = await Room.findById(req.params.id);
+              res.status(200).json(roomUpdated);
+            } else {
+              res.status(400).json({ error: "Can't add more than 5 pictures" });
+            }
+          } else {
+            res.status(401).json({ error: "Unauthorized" });
+          }
+        } else {
+          res.status(400).json({ error: "picture is missing" });
+        }
+      } else {
+        res.status(400).json({ error: "unknown room id" });
+      }
+    } else {
+      res.status(400).json({ error: "room id is missing" });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put("/room/delete_picture/:id", isAuthenticated, async (req, res) => {
+  try {
+    if (req.params.id) {
+      const roomToUpdate = await Room.findById(req.params.id);
+      if (roomToUpdate) {
+        const userId = req.user._id;
+        const roomUserId = roomToUpdate.user;
+        if (String(userId) === String(roomUserId)) {
+          const picture_id = req.query.picture_id;
+          if (picture_id) {
+            const allPhotos = roomToUpdate.photos;
+            let isPhoto = false;
+            let index;
+            for (let i = 0; i < allPhotos.length; i++) {
+              let tab = allPhotos[i].picture_id.split("/");
+              p_id = tab.pop();
+              if (picture_id === p_id) {
+                isPhoto = true;
+                index = i;
+                break;
+              }
+            }
+            if (isPhoto) {
+              allPhotos.splice(index, 1);
+              await cloudinary.uploader.destroy(
+                `airbnb/rooms/${req.user._id}/${req.params.id}/${picture_id}`
+              );
+              const update = await Room.findByIdAndUpdate(req.params.id, {
+                photos: allPhotos,
+              });
+              res.status(200).json({ message: "Picture deleted", update });
+            } else {
+              res.status(400).json({ error: "Picture not found" });
+            }
+          } else {
+            res.status(400).json({ error: "picture id is missing" });
+          }
+        } else {
+          res.status(401).json({ error: "Unauthorized" });
+        }
+      } else {
+        res.status(400).json({ error: "unknown room id" });
+      }
+    } else {
+      res.status(400).json({ error: "room id is missing" });
     }
   } catch (error) {
     console.log(error.message);
