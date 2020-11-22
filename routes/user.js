@@ -15,8 +15,27 @@ const Room = require("../models/Room");
 router.get("/users", isAdmin, async (req, res) => {
   try {
     const allUsers = await User.find();
-    //console.log(allUsers);
+
     res.status(200).json({ allUsers });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get("/users/:id", async (req, res) => {
+  try {
+    if (req.params.id) {
+      const user = await User.findById(req.params.id);
+
+      res.status(200).json({
+        _id: user._id,
+        account: user.account,
+        rooms: user.rooms,
+      });
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
+    }
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ error: error.message });
@@ -121,18 +140,30 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
-router.post("/user/upload_picture/:id", async (req, res) => {
+router.post("/user/upload_picture/:id", isAuthenticated, async (req, res) => {
   try {
     const userToUpdate = await User.findById(req.params.id);
-    if (userToUpdate) {
+    if (userToUpdate._id.toString() === req.user._id.toString()) {
       if (req.files.picture) {
         const pictureToUpload = req.files.picture.path;
-        const newPicture = await cloudinary.uploader.upload(pictureToUpload, {
-          folder: `/airbnb/users/${req.params.id}`,
-          public_id: "personalPicture",
-        });
-        userToUpdate.account.picture = newPicture;
-        await userToUpdate.save();
+        const newPicture = await cloudinary.uploader.upload(
+          pictureToUpload,
+          {
+            folder: `/airbnb/users/${req.params.id}`,
+            public_id: "personalPicture",
+          },
+          async (error, result) => {
+            let newPicture = {
+              url: result.secure_url,
+              picture_id: result.public_id,
+            };
+
+            await User.findOneAndUpdate(req.params.id, {
+              "account.picture": newPicture,
+            });
+          }
+        );
+
         res.status(200).json({
           account: {
             picture: {
@@ -159,10 +190,10 @@ router.post("/user/upload_picture/:id", async (req, res) => {
   }
 });
 
-router.post("/user/delete_picture/:id", async (req, res) => {
+router.post("/user/delete_picture/:id", isAuthenticated, async (req, res) => {
   try {
     const userToUpdate = await User.findById(req.params.id);
-    if (userToUpdate) {
+    if (userToUpdate._id.toString() === req.user._id.toString()) {
       const public_id = userToUpdate.account.picture.public_id;
       const pictureToDelete = await cloudinary.api.delete_resources(public_id);
       if (pictureToDelete) {
@@ -185,6 +216,34 @@ router.post("/user/delete_picture/:id", async (req, res) => {
       }
     } else {
       res.status(400).json({ error: "unknown user id" });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get("/user/rooms/:id", isAuthenticated, async (req, res) => {
+  try {
+    if (req.params.id) {
+      const user = await User.findById(req.params.id);
+      if (user) {
+        const userRooms = user.rooms;
+        if (userRooms.length > 0) {
+          let arrRooms = [];
+          for (let i = 0; i < userRooms.length; i++) {
+            const room = await Room.findById(userRooms[i]);
+            arrRooms.push(room);
+          }
+          res.status(200).json(arrRooms);
+        } else {
+          res.status(400).json({ message: "user has no rooms" });
+        }
+      } else {
+        res.status(400).json({ message: "user not found" });
+      }
+    } else {
+      res.status(400).json({ message: "user id is missing" });
     }
   } catch (error) {
     console.log(error.message);

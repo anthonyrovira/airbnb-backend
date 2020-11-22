@@ -52,8 +52,62 @@ router.post("/room/publish", isAuthenticated, async (req, res) => {
 
 router.get("/rooms", async (req, res) => {
   try {
-    const allRooms = await Room.find().select("-description");
-    res.status(200).json({ allRooms });
+    const createFilters = (req) => {
+      const filters = {};
+
+      if (req.query.title) {
+        filters.title = new RegExp(req.query.title, "i");
+      }
+      if (req.query.priceMin) {
+        filters.price = {};
+        filters.price.$gte = req.query.priceMin;
+      }
+      if (req.query.priceMax) {
+        if (filters.price) {
+          filters.price.$lte = req.query.priceMax;
+        } else {
+          filters.price = {};
+          filters.price.$lte = req.query.priceMax;
+        }
+      }
+      return filters;
+    };
+
+    // 1 - On appelle la fonction createFilters et on la stocke dans la variable filters
+    const filters = createFilters(req);
+
+    // 2 - Trie par ordre croissant et décroissant
+    let sort = {};
+    if (req.query.sort === "price-asc") {
+      sort = { price: 1 };
+    } else if (req.query.sort === "price-desc") {
+      sort = { price: -1 };
+    }
+
+    // 3 - Création de la pagination
+    let page = 1;
+    let limit = 10;
+    if (req.query.page && Number(req.query.page) > 0) {
+      page = Number(req.query.page);
+      if (req.query.limit) {
+        limit = Number(req.query.limit);
+      }
+    }
+
+    // 4 - Application du filtre et du tri sur le contenu Room de la BDD, en intégrant les infos de l'utilisateur
+    const search = await Room.find(filters, { description: false })
+      .populate({
+        path: "user",
+        select: "account",
+      })
+      .sort(sort)
+      .limit(limit)
+      .skip(page * limit - limit);
+
+    // 5 - Application des critères de recherche
+    const rooms = await search;
+
+    res.status(200).json(rooms);
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ error: error.message });
