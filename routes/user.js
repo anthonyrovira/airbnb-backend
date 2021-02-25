@@ -49,11 +49,11 @@ router.post("/user/signup", async (req, res) => {
       const userEmail = await User.findOne({ email });
       const userUsername = await User.findOne({ username });
       if (userEmail) {
-        res.status(400).json({ error: "This email already has an account." });
+        res.status(400).json({ message: "This email already has an account." });
       } else if (userUsername) {
         res
           .status(400)
-          .json({ error: "This username already has an account." });
+          .json({ message: "This username already has an account." });
       } else {
         const {
           email,
