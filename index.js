@@ -36,7 +36,5 @@ app.all("*", (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  const host = process.env.MONGODB_URI.replace("mongodb://", "");
-  const port = process.env.PORT || 3000;
-  console.log("App listening at http://%s:%s", host, port);
+  console.log(`Server has started on port ${process.env.PORT || 3000}`);
 });
