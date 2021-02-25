@@ -45,23 +45,25 @@ router.get("/users/:id", async (req, res) => {
 router.post("/user/signup", async (req, res) => {
   try {
     if (req.fields.email && req.fields.password && req.fields.username) {
-    const { email, username } = req.fields;
-    const userEmail = await User.findOne({ email });
-    const userUsername = await User.findOne({ username });
-    if (userEmail) {
-      res.status(400).json({ error: "This email already has an account." });
-    } else if (userUsername) {
-      res.status(400).json({ error: "This username already has an account." });
-    } else {
-      const {
-        email,
-        password,
-        username,
-        name,
-        dateOfBirth,
-        description,
-      } = req.fields;
-      const regexDate = /\d{4}-\d{2}-\d{2}/g;
+      const { email, username } = req.fields;
+      const userEmail = await User.findOne({ email });
+      const userUsername = await User.findOne({ username });
+      if (userEmail) {
+        res.status(400).json({ error: "This email already has an account." });
+      } else if (userUsername) {
+        res
+          .status(400)
+          .json({ error: "This username already has an account." });
+      } else {
+        const {
+          email,
+          password,
+          username,
+          name,
+          dateOfBirth,
+          description,
+        } = req.fields;
+        const regexDate = /\d{4}-\d{2}-\d{2}/g;
 
         if (regexDate.test(dateOfBirth)) {
           const salt = uid2(64);
@@ -95,9 +97,9 @@ router.post("/user/signup", async (req, res) => {
         } else {
           res.status(400).json({ error: "Date format is incorrect" });
         }
-      } else {
-        res.status(400).json({ error: "Missing parameters" });
       }
+    } else {
+      res.status(400).json({ error: "Missing parameters" });
     }
   } catch (error) {
     console.log(error.message);
@@ -109,7 +111,6 @@ router.post("/user/signup", async (req, res) => {
 
 router.post("/user/login", async (req, res) => {
   try {
-  
     if (req.fields.email && req.fields.password) {
       const { email, password } = req.fields;
       const user = await User.findOne({ email: email });
