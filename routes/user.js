@@ -129,7 +129,7 @@ router.post("/user/login", async (req, res) => {
           res.status(401).json({ error: "Wrong email or password" });
         }
       } else {
-        res.status(401).json({ error: "User not yet registered" });
+        res.status(404).json({ error: "User not yet registered" });
       }
     } else {
       res.status(400).json({ error: "Missing parameters" });
