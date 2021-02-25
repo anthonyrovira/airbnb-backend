@@ -44,6 +44,7 @@ router.get("/users/:id", async (req, res) => {
 
 router.post("/user/signup", async (req, res) => {
   try {
+    if (req.fields.email && req.fields.password && req.fields.username) {
     const { email, username } = req.fields;
     const userEmail = await User.findOne({ email });
     const userUsername = await User.findOne({ username });
@@ -62,7 +63,6 @@ router.post("/user/signup", async (req, res) => {
       } = req.fields;
       const regexDate = /\d{4}-\d{2}-\d{2}/g;
 
-      if (email && password && username) {
         if (regexDate.test(dateOfBirth)) {
           const salt = uid2(64);
           const hash = SHA256(password + salt).toString(encBase64);
@@ -109,8 +109,9 @@ router.post("/user/signup", async (req, res) => {
 
 router.post("/user/login", async (req, res) => {
   try {
-    const { email, password } = req.fields;
-    if (email && password) {
+  
+    if (req.fields.email && req.fields.password) {
+      const { email, password } = req.fields;
       const user = await User.findOne({ email: email });
       if (user) {
         const hashToCompare = SHA256(password + user.salt).toString(encBase64);
