@@ -223,6 +223,100 @@ router.post("/user/delete_picture/:id", isAuthenticated, async (req, res) => {
   }
 });
 
+router.put("/user/update", isAuthenticated, async (req, res) => {
+  try {
+    if (
+      req.fields.username ||
+      req.fields.name ||
+      req.fields.email ||
+      req.fields.description ||
+      req.fields.dateOfBirth
+    ) {
+      const user = await User.findById(req.user._id).select(
+        "-token -hash -salt"
+      );
+      if (user) {
+        const { username, name, email, description, dateOfBirth } = req.fields;
+
+        if (email) {
+          const alreadyExists = await User.findOne({ email: email });
+          if (alreadyExists) {
+            res
+              .status(400)
+              .json({ error: "this email has already an account" });
+          } else {
+            user.email = email;
+          }
+        }
+        if (username) {
+          const alreadyExists = await User.findOne({
+            account: {
+              username: username,
+            },
+          });
+          if (alreadyExists) {
+            res.status(400).json({ error: "this username is already taken" });
+          } else {
+            user.account.username = username;
+          }
+        }
+        if (name && user.account.name != name) {
+          user.account.name = name;
+        }
+        if (description && user.account.description != description) {
+          user.account.description = description;
+        }
+        if (dateOfBirth && user.account.dateOfBirth != dateOfBirth) {
+          user.account.dateOfBirth = dateOfBirth;
+        }
+
+        const userUpdated = await user.save();
+
+        res.status(200).json(userUpdated);
+      } else {
+        res.status(400).json({ error: "unknown user id" });
+      }
+    } else {
+      res.status(400).json({ error: "nothing to update" });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put("/user/update_password", isAuthenticated, async (req, res) => {
+  try {
+    if (req.fields.previousPassword && req.fields.newPassword) {
+      const { previousPassword, newPassword } = req.fields;
+      const user = await User.findById(req.user._id);
+      const hashPreviousPassword = SHA256(
+        previousPassword + user.salt
+      ).toString(encBase64);
+      console.log(hashPreviousPassword);
+      console.log(user.hash);
+      if (hashPreviousPassword === user.hash) {
+        const newSalt = uid2(64);
+        const hashNewPassword = SHA256(newPassword + newSalt).toString(
+          encBase64
+        );
+        /**
+         * A CONTINUER
+         */
+      } else {
+        res.status(400).json({ error: "wrong password" });
+      }
+    } else {
+      res
+        .status(400)
+        .json({ error: "previous and/or new password not provided" });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 router.get("/user/rooms/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {

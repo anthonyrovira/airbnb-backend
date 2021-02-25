@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/jest": "^26.0.15",
     "cloudinary": "^1.23.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.0.0",
@@ -19,5 +22,8 @@
     "helmet": "^4.2.0",
     "mongoose": "^5.10.13",
     "uid2": "0.0.3"
+  },
+  "devDependencies": {
+    "supertest": "^6.0.1"
   }
 }
