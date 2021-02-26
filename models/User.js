@@ -4,14 +4,12 @@ const User = mongoose.model("User", {
   email: { unique: true, required: true, type: String },
   account: {
     username: { unique: true, required: true, type: String },
-    name: { type: String, max: 25 },
     description: { type: String, max: 500 },
-    dateOfBirth: Date,
     picture: mongoose.Schema.Types.Mixed,
   },
-  token: { type: String, min: 64, max: 64 },
-  hash: String,
-  salt: String,
+  token: { type: String, required: true, min: 64, max: 64 },
+  hash: { type: String, required: true },
+  salt: { type: String, required: true },
   rooms: [
     // "rooms" permettra de stocker toutes les références vers les annonces créées par l'utilisateur
     {

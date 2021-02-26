@@ -55,48 +55,34 @@ router.post("/user/signup", async (req, res) => {
           .status(400)
           .json({ message: "This username already has an account." });
       } else {
-        const {
-          email,
-          password,
-          username,
-          name,
-          dateOfBirth,
-          description,
-        } = req.fields;
-        const regexDate = /\d{4}-\d{2}-\d{2}/g;
+        const { email, password, username, description } = req.fields;
+        /*const regexDate = /\d{4}-\d{2}-\d{2}/g;*/
 
-        if (regexDate.test(dateOfBirth)) {
-          const salt = uid2(64);
-          const hash = SHA256(password + salt).toString(encBase64);
-          const token = uid2(64);
+        const salt = uid2(64);
+        const hash = SHA256(password + salt).toString(encBase64);
+        const token = uid2(64);
 
-          const newUser = new User({
-            email: email,
-            account: {
-              username: username,
-              name: name,
-              description: description,
-              dateOfBirth: dateOfBirth,
-            },
-            token: token,
-            hash: hash,
-            salt: salt,
-          });
+        const newUser = new User({
+          email: email,
+          account: {
+            username: username,
+            description: description || "",
+          },
+          token: token,
+          hash: hash,
+          salt: salt,
+        });
 
-          await newUser.save();
+        await newUser.save();
 
-          const newUserReturned = await User.findOne({ token: token });
-          res.status(200).json({
-            _id: newUserReturned._id,
-            token: newUserReturned.token,
-            email: newUserReturned.email,
-            username: newUserReturned.account.username,
-            description: newUserReturned.account.description,
-            name: newUserReturned.account.name,
-          });
-        } else {
-          res.status(400).json({ error: "Date format is incorrect" });
-        }
+        const newUserReturned = await User.findOne({ token: token });
+        res.status(200).json({
+          _id: newUserReturned._id,
+          token: newUserReturned.token,
+          email: newUserReturned.email,
+          username: newUserReturned.account.username,
+          description: newUserReturned.account.description,
+        });
       }
     } else {
       res.status(400).json({ error: "Missing parameters" });
