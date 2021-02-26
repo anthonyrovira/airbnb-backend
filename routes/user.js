@@ -85,7 +85,7 @@ router.post("/user/signup", async (req, res) => {
         });
       }
     } else {
-      res.status(400).json({ error: "Missing parameters" });
+      res.status(400).json({ message: "Missing parameters" });
     }
   } catch (error) {
     console.log(error.message);
