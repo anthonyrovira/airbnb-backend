@@ -137,6 +137,25 @@ router.get("/rooms/:id", async (req, res) => {
   }
 });
 
+router.get("/rooms/around", async (req, res) => {
+  try {
+    let rooms;
+    if (req.query.latitude && req.query.longitude) {
+      rooms = await Room.find({
+        location: {
+          $near: [req.query.longitude, req.query.latitude],
+          $maxDistance: 0.05,
+        },
+      });
+    } else {
+      rooms = await Room.find();
+    }
+    res.json(rooms);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 router.post("/room/update/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {
