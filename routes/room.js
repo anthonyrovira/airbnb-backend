@@ -124,7 +124,7 @@ router.get("/rooms/:id", async (req, res) => {
           "account email"
         );
         roomToUpload.user = user.populate("user");
-        res.status(200).json({ roomToUpload });
+        res.status(200).json(roomToUpload);
       } else {
         res.status(400).json({ message: "unknown room in database" });
       }
