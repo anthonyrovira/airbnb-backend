@@ -20,7 +20,10 @@ const Room = mongoose.model("Room", {
   },
   reviews: Number,
   photos: [mongoose.Schema.Types.Mixed],
-  location: [Number],
+  location: {
+    type: [Number],
+    index: "2d",
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
