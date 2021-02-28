@@ -121,7 +121,7 @@ router.get("/rooms/:id", async (req, res) => {
       const roomToUpload = await Room.findById(roomId);
       if (roomToUpload) {
         const user = await User.findById(roomToUpload.user).select(
-          "account.username account.description account.name"
+          "account email"
         );
         roomToUpload.user = user.populate("user");
         res.status(200).json({ roomToUpload });

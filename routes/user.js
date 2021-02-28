@@ -67,7 +67,9 @@ router.post("/user/signup", async (req, res) => {
           account: {
             username: username,
             description: description || "",
+            picture: null,
           },
+          rooms: [],
           token: token,
           hash: hash,
           salt: salt,
