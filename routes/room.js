@@ -144,7 +144,7 @@ router.get("/rooms/around", async (req, res) => {
       rooms = await Room.find({
         location: {
           $near: [req.query.longitude, req.query.latitude],
-          $maxDistance: 0.05,
+          $maxDistance: 0.5,
         },
       });
     } else {

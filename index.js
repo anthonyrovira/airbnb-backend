@@ -3,12 +3,14 @@ const formidable = require("express-formidable");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
+const helmet = require("helmet");
 
 require("dotenv").config();
 
 const app = express();
 app.use(formidable());
 app.use(cors());
+app.use(helmet());
 
 mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
