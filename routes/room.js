@@ -113,6 +113,25 @@ router.get("/rooms", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+router.get("/rooms/around", async (req, res) => {
+  console.log(latitude, longitude);
+  try {
+    let rooms;
+    if (req.query.latitude && req.query.longitude) {
+      rooms = await Room.find({
+        location: {
+          $near: [req.query.longitude, req.query.latitude],
+          $maxDistance: 0.05,
+        },
+      });
+    } else {
+      rooms = await Room.find();
+    }
+    res.json(rooms);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 router.get("/rooms/:id", async (req, res) => {
   try {
@@ -133,26 +152,6 @@ router.get("/rooms/:id", async (req, res) => {
     }
   } catch (error) {
     console.log(error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-router.get("/rooms/around", async (req, res) => {
-  console.log(latitude, longitude);
-  try {
-    let rooms;
-    if (req.query.latitude && req.query.longitude) {
-      rooms = await Room.find({
-        location: {
-          $near: [req.query.longitude, req.query.latitude],
-          $maxDistance: 0.05,
-        },
-      });
-    } else {
-      rooms = await Room.find();
-    }
-    res.json(rooms);
-  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
