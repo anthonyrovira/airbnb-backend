@@ -22,6 +22,7 @@ const Room = mongoose.model("Room", {
   photos: [mongoose.Schema.Types.Mixed],
   location: {
     type: [Number],
+    index: "2d",
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
