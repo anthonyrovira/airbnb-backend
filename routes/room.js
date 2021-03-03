@@ -113,6 +113,7 @@ router.get("/rooms", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
 router.get("/rooms/around", async (req, res) => {
   try {
     let rooms;

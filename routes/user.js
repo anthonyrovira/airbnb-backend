@@ -30,6 +30,7 @@ router.get("/users/:id", async (req, res) => {
 
       res.status(200).json({
         _id: user._id,
+        email: user.email,
         account: user.account,
         rooms: user.rooms,
       });
