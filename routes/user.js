@@ -23,7 +23,7 @@ router.get("/users", isAdmin, async (req, res) => {
   }
 });
 
-router.get("/users/:id", async (req, res) => {
+router.get("/users/:id", isAuthenticated, async (req, res) => {
   try {
     if (req.params.id) {
       const user = await User.findById(req.params.id);
