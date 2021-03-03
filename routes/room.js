@@ -138,10 +138,10 @@ router.get("/rooms/:id", async (req, res) => {
 });
 
 router.get("/rooms/around", async (req, res) => {
+  console.log(latitude, longitude);
   try {
     let rooms;
     if (req.query.latitude && req.query.longitude) {
-      console.log(latitude, longitude);
       rooms = await Room.find({
         location: {
           $near: [req.query.longitude, req.query.latitude],
