@@ -216,24 +216,18 @@ router.post("/user/delete_picture/:id", isAuthenticated, async (req, res) => {
 
 router.put("/user/update", isAuthenticated, async (req, res) => {
   try {
-    if (
-      req.fields.username ||
-      req.fields.name ||
-      req.fields.email ||
-      req.fields.description ||
-      req.fields.dateOfBirth
-    ) {
+    if (req.fields.username || req.fields.email || req.fields.description) {
       const user = await User.findById(req.user._id).select(
         "-token -hash -salt"
       );
       if (user) {
-        const { username, name, email, description, dateOfBirth } = req.fields;
+        const { username, email, description } = req.fields;
 
         if (email) {
           const alreadyExists = await User.findOne({ email: email });
           if (alreadyExists) {
             res
-              .status(400)
+              .status(401)
               .json({ error: "this email has already an account" });
           } else {
             user.email = email;
@@ -246,26 +240,29 @@ router.put("/user/update", isAuthenticated, async (req, res) => {
             },
           });
           if (alreadyExists) {
-            res.status(400).json({ error: "this username is already taken" });
+            res.status(401).json({ error: "this username is already taken" });
           } else {
             user.account.username = username;
           }
         }
-        if (name && user.account.name != name) {
-          user.account.name = name;
-        }
         if (description && user.account.description != description) {
           user.account.description = description;
-        }
-        if (dateOfBirth && user.account.dateOfBirth != dateOfBirth) {
-          user.account.dateOfBirth = dateOfBirth;
         }
 
         const userUpdated = await user.save();
 
-        res.status(200).json(userUpdated);
+        const userWithUpdates = await User.findOne({
+          email: userUpdated.email,
+        });
+        res.status(200).json({
+          _id: userWithUpdates._id,
+          token: userWithUpdates.token,
+          email: userWithUpdates.email,
+          username: userWithUpdates.account.username,
+          description: userWithUpdates.account.description,
+        });
       } else {
-        res.status(400).json({ error: "unknown user id" });
+        res.status(404).json({ error: "unknown user id" });
       }
     } else {
       res.status(400).json({ error: "nothing to update" });
