@@ -223,7 +223,7 @@ router.put("/user/update", isAuthenticated, async (req, res) => {
       if (user) {
         const { username, email, description } = req.fields;
 
-        if (email) {
+        if (email && email !== user.email) {
           const alreadyExists = await User.findOne({ email: email });
           if (alreadyExists) {
             res
@@ -233,7 +233,7 @@ router.put("/user/update", isAuthenticated, async (req, res) => {
             user.email = email;
           }
         }
-        if (username) {
+        if (username && username !== user.username) {
           const alreadyExists = await User.findOne({
             account: {
               username: username,
