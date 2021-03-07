@@ -159,7 +159,7 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
           }
         );
       } else {
-        await cloudinary.uploader.destroy(userToUpdate.account.picture.id);
+        await cloudinary.uploader.destroy(userToUpdate.account.picture[0].id);
         await cloudinary.uploader.upload(
           pictureToUpload,
           {
