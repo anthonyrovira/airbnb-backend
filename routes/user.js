@@ -134,6 +134,7 @@ router.post("/user/login", async (req, res) => {
 router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
   try {
     if (req.files.picture) {
+      console.log(req.files.picture);
       const userToUpdate = req.user;
       const pictureToUpload = req.files.picture.path;
       if (userToUpdate.account.picture === null) {
