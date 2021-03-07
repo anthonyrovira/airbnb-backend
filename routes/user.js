@@ -131,49 +131,73 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
-router.post("/user/upload_picture/:id", isAuthenticated, async (req, res) => {
+router.post("/user/upload_picture", isAuthenticated, async (req, res) => {
   try {
-    const userToUpdate = await User.findById(req.params.id);
-    if (userToUpdate._id.toString() === req.user._id.toString()) {
-      if (req.files.picture) {
-        const pictureToUpload = req.files.picture.path;
-        const newPicture = await cloudinary.uploader.upload(
+    if (req.files.picture) {
+      const userToUpdate = req.user;
+      const pictureToUpload = req.files.picture.path;
+      if (userToUpdate.account.picture === null) {
+        await cloudinary.uploader.upload(
           pictureToUpload,
           {
-            folder: `/airbnb/users/${req.params.id}`,
+            folder: `/airbnb/users/${userToUpdate._id}`,
             public_id: "personalPicture",
           },
           async (error, result) => {
-            let newPicture = {
-              url: result.secure_url,
-              picture_id: result.public_id,
-            };
-
-            await User.findOneAndUpdate(req.params.id, {
-              "account.picture": newPicture,
-            });
+            if (error) {
+              res.status(400).json({ error: "An error occurred" });
+            } else {
+              let newPicture = {
+                url: result.secure_url,
+                id: result.public_id,
+                name: req.files.photo.name,
+                type: req.files.photo.type,
+              };
+              await User.findOneAndUpdate(req.params.id, {
+                "account.picture": newPicture,
+              });
+            }
           }
         );
-
-        res.status(200).json({
-          account: {
-            picture: {
-              url: newPicture.url,
-              picture_id: newPicture.public_id,
-            },
-            username: userToUpdate.account.username,
-            description: userToUpdate.account.description,
-            name: userToUpdate.account.name,
-          },
-          _id: userToUpdate._id,
-          email: userToUpdate.email,
-          rooms: userToUpdate.rooms,
-        });
       } else {
-        res.status(400).json({ error: "picture is missing" });
+        await cloudinary.uploader.destroy(userToUpdate.account.picture.id);
+        await cloudinary.uploader.upload(
+          pictureToUpload,
+          {
+            folder: `/airbnb/users/${userToUpdate._id}`,
+            public_id: "personalPicture",
+          },
+          async (error, result) => {
+            if (error) {
+              res.status(400).json({ error: "An error occurred" });
+            } else {
+              let newPicture = {
+                url: result.secure_url,
+                id: result.public_id,
+                name: req.files.photo.name,
+                type: req.files.photo.type,
+              };
+              await User.findOneAndUpdate(req.params.id, {
+                "account.picture": newPicture,
+              });
+            }
+          }
+        );
       }
+
+      const userUpdated = await User.findById(userToUpdate._id);
+      res.status(200).json({
+        account: {
+          picture: userUpdated.account.picture,
+          username: userUpdated.account.username,
+          description: userUpdated.account.description,
+        },
+        _id: userUpdated._id,
+        email: userUpdated.email,
+        rooms: userUpdated.rooms,
+      });
     } else {
-      res.status(400).json({ error: "unknown user id" });
+      res.status(400).json({ error: "picture is missing" });
     }
   } catch (error) {
     console.log(error.message);
@@ -181,32 +205,35 @@ router.post("/user/upload_picture/:id", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/user/delete_picture/:id", isAuthenticated, async (req, res) => {
+router.post("/user/delete_picture", isAuthenticated, async (req, res) => {
   try {
-    const userToUpdate = await User.findById(req.params.id);
-    if (userToUpdate._id.toString() === req.user._id.toString()) {
-      const public_id = userToUpdate.account.picture.public_id;
+    const userToUpdate = req.user;
+    if (userToUpdate.account.picture !== null) {
+      const public_id = userToUpdate.account.picture.id;
       const pictureToDelete = await cloudinary.api.delete_resources(public_id);
+
       if (pictureToDelete) {
         await cloudinary.api.delete_folder(`airbnb/users/${userToUpdate._id}`);
-        userToUpdate.account.picture = undefined;
+        userToUpdate.account.picture = null;
+
         await userToUpdate.save();
+
+        const userUpdated = await User.findById(userToUpdate._id);
         res.status(200).json({
           account: {
-            picture: null,
-            username: userToUpdate.account.username,
-            description: userToUpdate.account.description,
-            name: userToUpdate.account.name,
+            picture: userUpdated.account.picture,
+            username: userUpdated.account.username,
+            description: userUpdated.account.description,
           },
-          _id: userToUpdate._id,
-          email: userToUpdate.email,
-          rooms: userToUpdate.rooms,
+          _id: userUpdated._id,
+          email: userUpdated.email,
+          rooms: userUpdated.rooms,
         });
       } else {
         res.status(400).json({ error: "bad request" });
       }
     } else {
-      res.status(400).json({ error: "unknown user id" });
+      res.status(400).json({ error: "no picture to delete" });
     }
   } catch (error) {
     console.log(error.message);
