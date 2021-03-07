@@ -131,7 +131,7 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
-router.post("/user/upload_picture", isAuthenticated, async (req, res) => {
+router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
   try {
     if (req.files.picture) {
       const userToUpdate = req.user;
@@ -204,7 +204,7 @@ router.post("/user/upload_picture", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/user/delete_picture", isAuthenticated, async (req, res) => {
+router.put("/user/delete_picture", isAuthenticated, async (req, res) => {
   try {
     const userToUpdate = req.user;
     if (userToUpdate.account.picture !== null) {
