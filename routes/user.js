@@ -151,8 +151,8 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
               let newPicture = {
                 url: result.secure_url,
                 id: result.public_id,
-                name: req.files.photo.name,
-                type: req.files.photo.type,
+                name: req.files.picture.name,
+                type: req.files.picture.type,
               };
               await User.findOneAndUpdate(userToUpdate._id, {
                 "account.picture": newPicture,
@@ -175,8 +175,8 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
               let newPicture = {
                 url: result.secure_url,
                 id: result.public_id,
-                name: req.files.photo.name,
-                type: req.files.photo.type,
+                name: req.files.picture.name,
+                type: req.files.picture.type,
               };
               await User.findOneAndUpdate(userToUpdate._id, {
                 "account.picture": newPicture,
