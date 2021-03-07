@@ -141,7 +141,6 @@ router.post("/user/upload_picture", isAuthenticated, async (req, res) => {
           pictureToUpload,
           {
             folder: `/airbnb/users/${userToUpdate._id}`,
-            public_id: "personalPicture",
           },
           async (error, result) => {
             if (error) {
