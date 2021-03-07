@@ -138,6 +138,7 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
       const userToUpdate = req.user;
       const pictureToUpload = req.files.picture.path;
       if (userToUpdate.account.picture === null) {
+        console.log("here");
         await cloudinary.uploader.upload(
           pictureToUpload,
           {
@@ -153,7 +154,7 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
                 name: req.files.photo.name,
                 type: req.files.photo.type,
               };
-              await User.findOneAndUpdate(req.params.id, {
+              await User.findOneAndUpdate(userToUpdate._id, {
                 "account.picture": newPicture,
               });
             }
@@ -177,7 +178,7 @@ router.put("/user/upload_picture", isAuthenticated, async (req, res) => {
                 name: req.files.photo.name,
                 type: req.files.photo.type,
               };
-              await User.findOneAndUpdate(req.params.id, {
+              await User.findOneAndUpdate(userToUpdate._id, {
                 "account.picture": newPicture,
               });
             }
