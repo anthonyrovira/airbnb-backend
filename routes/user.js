@@ -15,7 +15,7 @@ const Room = require("../models/Room");
 router.get("/users", isAdmin, async (req, res) => {
   try {
     const allUsers = await User.find();
-
+    console.log("test : " + JSON.stringify(res.isAdmin));
     res.status(200).json({ allUsers });
   } catch (error) {
     console.log(error.message);

@@ -8,6 +8,7 @@ const isAdmin = async (req, res, next) => {
       if (token === process.env.ADMIN_TOKEN) {
         // Il s'agit bien d'un admin token
         console.log("admin access granted");
+        res.isAdmin = true;
         return next();
       } else {
         return res.status(401).json({ message: "Unauthorized" });
